@@ -57,10 +57,7 @@ func ConvertData(conv *internal.Conv, srcTable string, srcCols []string, srcSche
 	}
 	for i, spCol := range spCols {
 		srcCol := srcCols[i]
-		// Skip columns with 'NULL' values. When processing data rows from mysqldump, these values
-		// are represented as nil (by pingcap/tidb/types/parser_driver's ValueExpr), which is
-		// converted to the string '<nil>'. When processing data rows obtained from the MySQL driver,
-		// 'NULL' values are represented as "NULL" (because we retrieve the values as strings).
+		// Skip columns with 'NULL' values.
 		if vals[i] == "<nil>" || vals[i] == "NULL" {
 			continue
 		}
@@ -140,7 +137,8 @@ func convBytes(val string) ([]byte, error) {
 }
 
 func convDate(val string) (civil.Date, error) {
-	d, err := civil.ParseDate(val)
+	date := strings.Fields(val)
+	d, err := civil.ParseDate(date[0])
 	if err != nil {
 		return d, fmt.Errorf("can't convert to date: %w", err)
 	}
@@ -148,11 +146,14 @@ func convDate(val string) (civil.Date, error) {
 }
 
 func convFloat64(val string) (float64, error) {
-	f, err := strconv.ParseFloat(val, 64)
-	if err != nil {
-		return f, fmt.Errorf("can't convert to float64: %w", err)
+	if strings.HasPrefix(val, "[") {
+		val = convertByteslice(val)
 	}
-	return f, err
+	float, err := strconv.ParseFloat(val, 64)
+	if err != nil {
+		return float, fmt.Errorf("can't convert to float64: %w", err)
+	}
+	return float, err
 }
 
 func convInt64(val string) (int64, error) {
@@ -166,6 +167,9 @@ func convInt64(val string) (int64, error) {
 // convNumeric maps a source database string value (representing a numeric)
 // into a string representing a valid Spanner numeric.
 func convNumeric(conv *internal.Conv, val string) (interface{}, error) {
+	if strings.HasPrefix(val, "[") {
+		val = convertByteslice(val)
+	}
 	if conv.TargetDb == constants.TargetExperimentalPostgres {
 		return spanner.PGNumeric{Numeric: val, Valid: true}, nil
 	} else {
@@ -180,11 +184,12 @@ func convNumeric(conv *internal.Conv, val string) (interface{}, error) {
 // convTimestamp maps a source DB timestamp into a go Time Spanner timestamp
 // It handles both datetime and timestamp conversions.
 func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t time.Time, err error) {
-	// mysqldump outputs timestamps as ISO 8601, except
-	// it uses space instead of T.
+	if strings.HasPrefix(val, "[") {
+		val = convertByteslice(val)
+	}
 	if srcTypeName == "timestamp" {
 		// We consider timezone for timestamp datatype.
-		// If timezone is not specified in mysqldump, we consider UTC time.
+		// If timezone is not specified, we consider UTC time.
 		if TimezoneOffset == "" {
 			TimezoneOffset = "+00:00"
 		}
@@ -194,14 +199,28 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 		timeJoined := strings.Join(timeNew, "T")
 		timeJoined = timeJoined + TimezoneOffset
 		t, err = time.Parse(time.RFC3339, timeJoined)
+	}
+	if srcTypeName == "datetimeoffset" {
+		//"2021-12-15 07:39:52.9433333 +0000 +0000"
+		if idx := strings.Index(val, "+"); idx != -1 {
+			val = val[:idx-1]
+		}
+		timeNew := strings.Split(val, " ")
+		timeJoined := strings.Join(timeNew, "T")
+		timeJoined = timeJoined + TimezoneOffset
+		t, err = time.Parse(time.RFC3339, timeJoined)
+		//t, err = time.Parse("2006-01-02 15:04:05", val)
 	} else {
 		// datetime: data should just consist of date and time.
-		// timestamp conversion should ignore timezone. We mimic this using Parse
-		// i.e. treat it as UTC, so it will be stored 'as-is' in Spanner.
+		// timestamp conversion should ignore timezone.
+		//"2021-12-15 07:39:52.943 +0000 UTC"
+		if idx := strings.Index(val, "+"); idx != -1 {
+			val = val[:idx-1]
+		}
 		t, err = time.Parse("2006-01-02 15:04:05", val)
 	}
 	if err != nil {
-		return t, fmt.Errorf("can't convert to timestamp (mysql type: %s)", srcTypeName)
+		return t, fmt.Errorf("can't convert to timestamp (mssql type: %s)", srcTypeName)
 	}
 	return t, err
 }
@@ -226,8 +245,6 @@ func convArray(spannerType ddl.Type, srcTypeName string, v string) (interface{},
 	// The Spanner client for go does not accept []interface{} for arrays.
 	// Instead it only accepts slices of a specific type eg: []string
 	// Hence we have to do the following case analysis.
-	// NOTE: MySQL only supports SET of string which will be translated
-	// to spanner array<string>.
 	switch spannerType.Name {
 	case ddl.String:
 		var r []spanner.NullString
@@ -260,4 +277,15 @@ func processQuote(s string) (string, error) {
 		return strconv.Unquote(s)
 	}
 	return s, nil
+}
+
+func convertByteslice(val string) string {
+	a := strings.Fields(val)
+	var values []byte
+	for _, v := range a {
+		v = strings.Trim(v, "[]")
+		int_val, _ := strconv.Atoi(v)
+		values = append(values, byte(int_val))
+	}
+	return string(values)
 }
