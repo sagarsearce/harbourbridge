@@ -15,6 +15,7 @@
 package sqlserver
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"math/bits"
@@ -146,8 +147,11 @@ func convDate(val string) (civil.Date, error) {
 }
 
 func convFloat64(val string) (float64, error) {
+	//val will be a byte slice in the form of a string
+	//convertByteslice conversts val to a proper byte slice
 	if strings.HasPrefix(val, "[") {
-		val = convertByteslice(val)
+		b := convertByteSlice(val)
+		val = string(b)
 	}
 	float, err := strconv.ParseFloat(val, 64)
 	if err != nil {
@@ -167,8 +171,11 @@ func convInt64(val string) (int64, error) {
 // convNumeric maps a source database string value (representing a numeric)
 // into a string representing a valid Spanner numeric.
 func convNumeric(conv *internal.Conv, val string) (interface{}, error) {
+	//val will be a byte slice in the form of a string
+	//convertByteslice conversts val to a proper byte slice
 	if strings.HasPrefix(val, "[") {
-		val = convertByteslice(val)
+		b := convertByteSlice(val)
+		val = string(b)
 	}
 	if conv.TargetDb == constants.TargetExperimentalPostgres {
 		return spanner.PGNumeric{Numeric: val, Valid: true}, nil
@@ -184,8 +191,13 @@ func convNumeric(conv *internal.Conv, val string) (interface{}, error) {
 // convTimestamp maps a source DB timestamp into a go Time Spanner timestamp
 // It handles both datetime and timestamp conversions.
 func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t time.Time, err error) {
+	//val will be a byte slice in the form of a string
+	//convertByteslice conversts val to a proper byte slice
 	if strings.HasPrefix(val, "[") {
-		val = convertByteslice(val)
+		b := convertByteSlice(val)
+		data := binary.BigEndian.Uint64(b)
+		t := time.Unix(int64(data), 0)
+		val = t.String()
 	}
 	if srcTypeName == "timestamp" {
 		// We consider timezone for timestamp datatype.
@@ -201,7 +213,8 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 		t, err = time.Parse(time.RFC3339, timeJoined)
 	}
 	if srcTypeName == "datetimeoffset" {
-		//"2021-12-15 07:39:52.9433333 +0000 +0000"
+		// val will be in this format "2021-12-15 07:39:52.9433333 +0000 +0000"
+		// we ignore the part after time
 		if idx := strings.Index(val, "+"); idx != -1 {
 			val = val[:idx-1]
 		}
@@ -209,11 +222,11 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 		timeJoined := strings.Join(timeNew, "T")
 		timeJoined = timeJoined + TimezoneOffset
 		t, err = time.Parse(time.RFC3339, timeJoined)
-		//t, err = time.Parse("2006-01-02 15:04:05", val)
 	} else {
 		// datetime: data should just consist of date and time.
 		// timestamp conversion should ignore timezone.
-		//"2021-12-15 07:39:52.943 +0000 UTC"
+		// val will be in this format "2021-12-15 07:39:52.943 +0000 UTC"
+		// we ignore the part after time
 		if idx := strings.Index(val, "+"); idx != -1 {
 			val = val[:idx-1]
 		}
@@ -279,7 +292,7 @@ func processQuote(s string) (string, error) {
 	return s, nil
 }
 
-func convertByteslice(val string) string {
+func convertByteSlice(val string) []byte {
 	a := strings.Fields(val)
 	var values []byte
 	for _, v := range a {
@@ -287,5 +300,5 @@ func convertByteslice(val string) string {
 		int_val, _ := strconv.Atoi(v)
 		values = append(values, byte(int_val))
 	}
-	return string(values)
+	return values
 }
