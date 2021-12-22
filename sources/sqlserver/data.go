@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,11 +75,7 @@ func ConvertData(conv *internal.Conv, srcTable string, srcCols []string, srcSche
 		}
 		var x interface{}
 		var err error
-		if spColDef.T.IsArray {
-			x, err = convArray(spColDef.T, srcColDef.Type.Name, vals[i])
-		} else {
-			x, err = convScalar(conv, spColDef.T, srcColDef.Type.Name, conv.TimezoneOffset, vals[i])
-		}
+		x, err = convScalar(conv, spColDef.T, srcColDef.Type.Name, conv.TimezoneOffset, vals[i])
 		if err != nil {
 			return "", []string{}, []interface{}{}, err
 		}
@@ -104,7 +100,6 @@ func convScalar(conv *internal.Conv, spannerType ddl.Type, srcTypeName string, T
 	// Note that many of the underlying conversions functions we use (like
 	// strconv.ParseFloat and strconv.ParseInt) return "invalid syntax"
 	// errors if whitespace were to appear at the start or end of a string.
-	// We do not expect pg_dump to generate such output.
 	switch spannerType.Name {
 	case ddl.Bool:
 		return convBool(val)
@@ -199,8 +194,8 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 		uint := binary.BigEndian.Uint64([]byte(val))
 		t = time.Unix(int64(uint), 0)
 	} else if srcTypeName == "datetimeoffset" {
-		// val will be in this format "2021-12-15 07:39:52.9433333 +0000 +0000"
-		// we ignore the part after time
+		// val will be in the format "2021-12-15 07:39:52.9433333 +0000 +0000"
+		// the part after time can be ignored
 		if idx := strings.Index(val, "+"); idx != -1 {
 			val = val[:idx-1]
 		}
@@ -212,7 +207,7 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 		// datetime: data should just consist of date and time.
 		// timestamp conversion should ignore timezone.
 		// val will be in this format "2021-12-15 07:39:52.943 +0000 UTC"
-		// we ignore the part after time
+		// the part after time can be ignored
 		if idx := strings.Index(val, "+"); idx != -1 {
 			val = val[:idx-1]
 		}
@@ -222,58 +217,4 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 		return t, fmt.Errorf("can't convert to timestamp (mssql type: %s)", srcTypeName)
 	}
 	return t, err
-}
-
-// convArray converts a source database string value (representing an
-// array) to an appropriate Spanner array value. It is the caller's
-// responsibility to detect and handle the case where the entire array
-// is NULL. However, convArray does handle the case where individual
-// array elements are NULL. In other words, convArray handles "{1,
-// NULL, 2}", but it does not handle "NULL" (it returns error).
-func convArray(spannerType ddl.Type, srcTypeName string, v string) (interface{}, error) {
-	v = strings.TrimSpace(v)
-	// Handle empty array. Note that we use an empty NullString array
-	// for all Spanner array types since this will be converted to the
-	// appropriate type by the Spanner client.
-	if v == "" {
-		return []spanner.NullString{}, nil
-	}
-
-	a := strings.Split(v, ",")
-
-	// The Spanner client for go does not accept []interface{} for arrays.
-	// Instead it only accepts slices of a specific type eg: []string
-	// Hence we have to do the following case analysis.
-	switch spannerType.Name {
-	case ddl.String:
-		var r []spanner.NullString
-		for _, s := range a {
-			if s == "NULL" {
-				r = append(r, spanner.NullString{Valid: false})
-				continue
-			}
-			s, err := processQuote(s)
-			if err != nil {
-				return []spanner.NullString{}, err
-			}
-			r = append(r, spanner.NullString{StringVal: s, Valid: true})
-		}
-		return r, nil
-	}
-	return []interface{}{}, fmt.Errorf("array type conversion not implemented for type %v", spannerType.Name)
-}
-
-// processQuote returns the unquoted version of s.
-// Note: The element values of PostgreSQL arrays may have double
-// quotes around them.  The array output routine will put double
-// quotes around element values if they are empty strings, contain
-// curly braces, delimiter characters, double quotes, backslashes, or
-// white space, or match the word NULL. Double quotes and backslashes
-// embedded in element values will be backslash-escaped.  See section
-// 8.14.6.of www.postgresql.org/docs/9.1/arrays.html.
-func processQuote(s string) (string, error) {
-	if len(s) >= 2 && s[0] == '"' && s[len(s)-1] == '"' {
-		return strconv.Unquote(s)
-	}
-	return s, nil
 }
