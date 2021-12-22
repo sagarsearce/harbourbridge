@@ -29,13 +29,15 @@ import (
 	"github.com/cloudspannerecosystem/harbourbridge/internal"
 	"github.com/cloudspannerecosystem/harbourbridge/schema"
 	"github.com/cloudspannerecosystem/harbourbridge/spanner/ddl"
+	"github.com/google/uuid"
 )
 
 const (
-	uuidType      string = "uniqueidentifier"
-	geographyType string = "geography"
-	geometryType  string = "geometry"
-	timeType      string = "time"
+	uuidType        string = "uniqueidentifier"
+	geographyType   string = "geography"
+	geometryType    string = "geometry"
+	timeType        string = "time"
+	hierarchyIdType string = "hierarchyid"
 )
 
 // ProcessDataRow converts a row of data and writes it out to Spanner.
@@ -118,9 +120,9 @@ func convScalar(conv *internal.Conv, spannerType ddl.Type, srcTypeName string, T
 		{
 			switch srcTypeName {
 			case uuidType:
-				//TODO : Convert to UIID string
-				return fmt.Sprintf("%#x", []byte(val)), nil
-			case geographyType, geometryType:
+				return getUuidString(val)
+			case geographyType, geometryType, hierarchyIdType:
+				//TODO: TBD the best way to store these. Currently storing as hex.
 				return fmt.Sprintf("%#x", []byte(val)), nil
 			case timeType:
 				return extractTime(val)
@@ -197,8 +199,8 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 		uint := binary.BigEndian.Uint64([]byte(val))
 		t = time.Unix(int64(uint), 0)
 	} else if srcTypeName == "datetimeoffset" {
-		// val will be in this format "2021-12-15 07:39:52.9433333 +0000 +0000"
-		// we ignore the part after time
+		// val will be in the format "2021-12-15 07:39:52.9433333 +0000 +0000"
+		// the part after time can be ignored
 		if idx := strings.Index(val, "+"); idx != -1 {
 			val = val[:idx-1]
 		}
@@ -210,7 +212,7 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 		// datetime: data should just consist of date and time.
 		// timestamp conversion should ignore timezone.
 		// val will be in this format "2021-12-15 07:39:52.943 +0000 UTC"
-		// we ignore the part after time
+		// the part after time can be ignored
 		if idx := strings.Index(val, "+"); idx != -1 {
 			val = val[:idx-1]
 		}
@@ -227,4 +229,12 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 func extractTime(val string) (interface{}, error) {
 	t := strings.Split(val, " ")[1]
 	return t, nil
+}
+
+func getUuidString(bs string) (string, error) {
+	r, err := uuid.FromBytes([]byte(bs))
+	if err != nil {
+		return "", fmt.Errorf("can't convert %q to UUID", bs)
+	}
+	return r.String(), nil
 }
