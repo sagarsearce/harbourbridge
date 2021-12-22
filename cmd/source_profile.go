@@ -190,7 +190,7 @@ func NewSourceProfileConnectionSqlServer(params map[string]string) (SourceProfil
 	}
 
 	if ss.port == "" {
-		// Set default port for postgresql, which rarely changes.
+		// Set default port for sql server, which rarely changes.
 		ss.port = "1433"
 	}
 	if ss.pwd == "" {
@@ -275,7 +275,7 @@ func NewSourceProfileConnection(source string, params map[string]string) (Source
 				return conn, err
 			}
 		}
-	case "sqlserver":
+	case "sqlserver", "mssql":
 		{
 			conn.ty = SourceProfileConnectionTypeSqlServer
 			conn.sqlserver, err = NewSourceProfileConnectionSqlServer(params)
@@ -390,9 +390,7 @@ func NewSourceProfile(s string, source string) (SourceProfile, error) {
 }
 
 var filePipedToStdin = func() bool {
-	// stat, _ := os.Stdin.Stat()
-	// // Data is being piped to stdin, if true. Else, stdin is from a terminal.
-	// return (stat.Mode() & os.ModeCharDevice) == 0
-
-	return false
+	stat, _ := os.Stdin.Stat()
+	// Data is being piped to stdin, if true. Else, stdin is from a terminal.
+	return (stat.Mode() & os.ModeCharDevice) == 0
 }

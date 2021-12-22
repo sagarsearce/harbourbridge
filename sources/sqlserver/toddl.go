@@ -27,7 +27,7 @@ const (
 	byteLimit   int64 = 10485760
 )
 
-// ToDdlImpl Postgres specific implementation for ToDdl.
+// ToDdlImpl sql server specific implementation for ToDdl.
 type ToDdlImpl struct {
 }
 
@@ -73,8 +73,10 @@ func toSpannerTypeInternal(conv *internal.Conv, id string, mods []int64) (ddl.Ty
 		return ddl.Type{Name: ddl.Numeric}, nil
 	case "ntext", "text", "xml":
 		return ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, nil
-	case "smalldatetime", "time", "datetimeoffset", "datetime2", "datetime", "timestamp":
+	case "smalldatetime", "datetimeoffset", "datetime2", "datetime", "timestamp":
 		return ddl.Type{Name: ddl.Timestamp}, []internal.SchemaIssue{internal.Timestamp}
+	case "time":
+		return ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, []internal.SchemaIssue{internal.Time}
 	case "varchar", "char", "nvarchar", "nchar":
 		if len(mods) > 0 && mods[0] > 0 && mods[0] <= stringLimit {
 			return ddl.Type{Name: ddl.String, Len: mods[0]}, nil

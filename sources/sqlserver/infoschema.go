@@ -118,7 +118,7 @@ func (isi InfoSchemaImpl) GetRowCount(table common.SchemaAndName) (int64, error)
 		err := rows.Scan(&count)
 		return count, err
 	}
-	return 0, nil //Check if 0 is ok to return
+	return 0, nil
 }
 
 // GetTables return list of tables in the selected database.
@@ -326,7 +326,6 @@ func (isi InfoSchemaImpl) GetIndexes(conv *internal.Conv, table common.SchemaAnd
 		return nil, err
 	}
 	defer rows.Close()
-	// TODO : remove sequence
 	var name, column, isUnique, collation string
 	indexMap := make(map[string]schema.Index)
 	var indexNames []string

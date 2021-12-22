@@ -35,6 +35,7 @@ const (
 	uuidType      string = "uniqueidentifier"
 	geographyType string = "geography"
 	geometryType  string = "geometry"
+	timeType      string = "time"
 )
 
 // ProcessDataRow converts a row of data and writes it out to Spanner.
@@ -121,6 +122,8 @@ func convScalar(conv *internal.Conv, spannerType ddl.Type, srcTypeName string, T
 				return fmt.Sprintf("%#x", []byte(val)), nil
 			case geographyType, geometryType:
 				return fmt.Sprintf("%#x", []byte(val)), nil
+			case timeType:
+				return extractTime(val)
 			default:
 				return val, nil
 			}
@@ -217,4 +220,11 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 		return t, fmt.Errorf("can't convert to timestamp (mssql type: %s)", srcTypeName)
 	}
 	return t, err
+}
+
+// extract only time form 0001-01-01 07:39:52.95 +0000 UTC this formate
+// output : 07:39:52.95
+func extractTime(val string) (interface{}, error) {
+	t := strings.Split(val, " ")[1]
+	return t, nil
 }
