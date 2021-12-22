@@ -370,6 +370,8 @@ func valsToStrings(vals []interface{}) []string {
 			return "NULL"
 		}
 		switch v := val.(type) {
+		case []uint8:
+			val = string([]byte(v))
 		case *interface{}:
 			val = *v
 		}

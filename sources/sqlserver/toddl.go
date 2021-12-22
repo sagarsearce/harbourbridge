@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	StringLimit int64 = 2621440
-	ByteLimit   int64 = 10485760
+	stringLimit int64 = 2621440
+	byteLimit   int64 = 10485760
 )
 
 // ToDdlImpl Postgres specific implementation for ToDdl.
@@ -60,9 +60,6 @@ func toSpannerTypeInternal(conv *internal.Conv, id string, mods []int64) (ddl.Ty
 	case "uniqueidentifier":
 		return ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, nil
 	case "binary", "varbinary", "image":
-		if len(mods) > 0 && mods[0] > 0 && mods[0] <= ByteLimit {
-			return ddl.Type{Name: ddl.Bytes, Len: mods[0]}, nil
-		}
 		return ddl.Type{Name: ddl.Bytes, Len: ddl.MaxLength}, nil
 	case "date":
 		return ddl.Type{Name: ddl.Date}, nil
@@ -79,7 +76,7 @@ func toSpannerTypeInternal(conv *internal.Conv, id string, mods []int64) (ddl.Ty
 	case "smalldatetime", "time", "datetimeoffset", "datetime2", "datetime", "timestamp":
 		return ddl.Type{Name: ddl.Timestamp}, []internal.SchemaIssue{internal.Timestamp}
 	case "varchar", "char", "nvarchar", "nchar":
-		if len(mods) > 0 && mods[0] > 0 && mods[0] <= StringLimit {
+		if len(mods) > 0 && mods[0] > 0 && mods[0] <= stringLimit {
 			return ddl.Type{Name: ddl.String, Len: mods[0]}, nil
 		}
 		return ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, nil

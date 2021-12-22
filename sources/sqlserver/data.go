@@ -31,6 +31,12 @@ import (
 	"github.com/cloudspannerecosystem/harbourbridge/spanner/ddl"
 )
 
+const (
+	uuidType      string = "uniqueidentifier"
+	geographyType string = "geography"
+	geometryType  string = "geometry"
+)
+
 // ProcessDataRow converts a row of data and writes it out to Spanner.
 // srcTable and srcCols are the source table and columns respectively,
 // and vals contains string data to be converted to appropriate types
@@ -113,7 +119,17 @@ func convScalar(conv *internal.Conv, spannerType ddl.Type, srcTypeName string, T
 	case ddl.Numeric:
 		return convNumeric(conv, val)
 	case ddl.String:
-		return val, nil
+		{
+			switch srcTypeName {
+			case uuidType:
+				//TODO : Convert to UIID string
+				return fmt.Sprintf("%#x", []byte(val)), nil
+			case geographyType, geometryType:
+				return fmt.Sprintf("%#x", []byte(val)), nil
+			default:
+				return val, nil
+			}
+		}
 	case ddl.Timestamp:
 		return convTimestamp(srcTypeName, TimezoneOffset, val)
 	case ddl.JSON:
@@ -147,12 +163,6 @@ func convDate(val string) (civil.Date, error) {
 }
 
 func convFloat64(val string) (float64, error) {
-	//val will be a byte slice in the form of a string
-	//convertByteslice conversts val to a proper byte slice
-	if strings.HasPrefix(val, "[") {
-		b := convertByteSlice(val)
-		val = string(b)
-	}
 	float, err := strconv.ParseFloat(val, 64)
 	if err != nil {
 		return float, fmt.Errorf("can't convert to float64: %w", err)
@@ -171,12 +181,6 @@ func convInt64(val string) (int64, error) {
 // convNumeric maps a source database string value (representing a numeric)
 // into a string representing a valid Spanner numeric.
 func convNumeric(conv *internal.Conv, val string) (interface{}, error) {
-	//val will be a byte slice in the form of a string
-	//convertByteslice conversts val to a proper byte slice
-	if strings.HasPrefix(val, "[") {
-		b := convertByteSlice(val)
-		val = string(b)
-	}
 	if conv.TargetDb == constants.TargetExperimentalPostgres {
 		return spanner.PGNumeric{Numeric: val, Valid: true}, nil
 	} else {
@@ -191,28 +195,10 @@ func convNumeric(conv *internal.Conv, val string) (interface{}, error) {
 // convTimestamp maps a source DB timestamp into a go Time Spanner timestamp
 // It handles both datetime and timestamp conversions.
 func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t time.Time, err error) {
-	//val will be a byte slice in the form of a string
-	//convertByteslice conversts val to a proper byte slice
-	if strings.HasPrefix(val, "[") {
-		b := convertByteSlice(val)
-		data := binary.BigEndian.Uint64(b)
-		t := time.Unix(int64(data), 0)
-		val = t.String()
-	}
 	if srcTypeName == "timestamp" {
-		// We consider timezone for timestamp datatype.
-		// If timezone is not specified, we consider UTC time.
-		if TimezoneOffset == "" {
-			TimezoneOffset = "+00:00"
-		}
-		// convert timestamp from format "2006-01-02 15:04:05" to
-		// "2006-01-02T15:04:05+00:00".
-		timeNew := strings.Split(val, " ")
-		timeJoined := strings.Join(timeNew, "T")
-		timeJoined = timeJoined + TimezoneOffset
-		t, err = time.Parse(time.RFC3339, timeJoined)
-	}
-	if srcTypeName == "datetimeoffset" {
+		uint := binary.BigEndian.Uint64([]byte(val))
+		t = time.Unix(int64(uint), 0)
+	} else if srcTypeName == "datetimeoffset" {
 		// val will be in this format "2021-12-15 07:39:52.9433333 +0000 +0000"
 		// we ignore the part after time
 		if idx := strings.Index(val, "+"); idx != -1 {
@@ -290,15 +276,4 @@ func processQuote(s string) (string, error) {
 		return strconv.Unquote(s)
 	}
 	return s, nil
-}
-
-func convertByteSlice(val string) []byte {
-	a := strings.Fields(val)
-	var values []byte
-	for _, v := range a {
-		v = strings.Trim(v, "[]")
-		int_val, _ := strconv.Atoi(v)
-		values = append(values, byte(int_val))
-	}
-	return values
 }
