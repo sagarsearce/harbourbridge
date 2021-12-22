@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -244,7 +244,7 @@ func TestProcessSchema(t *testing.T) {
 			ColDefs: map[string]ddl.ColumnDef{
 				"Id":               ddl.ColumnDef{Name: "Id", T: ddl.Type{Name: ddl.Int64}, NotNull: true},
 				"BigInt":           ddl.ColumnDef{Name: "BigInt", T: ddl.Type{Name: ddl.Int64}, NotNull: false},
-				"Binary":           ddl.ColumnDef{Name: "Binary", T: ddl.Type{Name: ddl.Bytes, Len: 50}, NotNull: false},
+				"Binary":           ddl.ColumnDef{Name: "Binary", T: ddl.Type{Name: ddl.Bytes, Len: ddl.MaxLength}, NotNull: false},
 				"Bit":              ddl.ColumnDef{Name: "Bit", T: ddl.Type{Name: ddl.Bool}, NotNull: false},
 				"Char":             ddl.ColumnDef{Name: "Char", T: ddl.Type{Name: ddl.String, Len: 10, IsArray: false}, NotNull: false},
 				"Date":             ddl.ColumnDef{Name: "Date", T: ddl.Type{Name: ddl.Date}, NotNull: false},
@@ -256,7 +256,7 @@ func TestProcessSchema(t *testing.T) {
 				"Geography":        ddl.ColumnDef{Name: "Geography", T: ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, NotNull: false},
 				"Geometry":         ddl.ColumnDef{Name: "Geometry", T: ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, NotNull: false},
 				"HierarchyId":      ddl.ColumnDef{Name: "HierarchyId", T: ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, NotNull: false},
-				"Image":            ddl.ColumnDef{Name: "Image", T: ddl.Type{Name: ddl.Bytes, Len: 9223372036854775807}, NotNull: false},
+				"Image":            ddl.ColumnDef{Name: "Image", T: ddl.Type{Name: ddl.Bytes, Len: ddl.MaxLength}, NotNull: false},
 				"Int":              ddl.ColumnDef{Name: "Int", T: ddl.Type{Name: ddl.Int64}, NotNull: false},
 				"Money":            ddl.ColumnDef{Name: "Money", T: ddl.Type{Name: ddl.Numeric}, NotNull: false},
 				"NChar":            ddl.ColumnDef{Name: "NChar", T: ddl.Type{Name: ddl.String, Len: 10}, NotNull: false},
@@ -274,7 +274,7 @@ func TestProcessSchema(t *testing.T) {
 				"TimeStamp":        ddl.ColumnDef{Name: "TimeStamp", T: ddl.Type{Name: ddl.Timestamp}, NotNull: false},
 				"TinyInt":          ddl.ColumnDef{Name: "TinyInt", T: ddl.Type{Name: ddl.Int64}, NotNull: false},
 				"UniqueIdentifier": ddl.ColumnDef{Name: "UniqueIdentifier", T: ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, NotNull: false},
-				"VarBinary":        ddl.ColumnDef{Name: "VarBinary", T: ddl.Type{Name: ddl.Bytes, Len: 50}, NotNull: false},
+				"VarBinary":        ddl.ColumnDef{Name: "VarBinary", T: ddl.Type{Name: ddl.Bytes, Len: ddl.MaxLength}, NotNull: false},
 				"VarBinaryMax":     ddl.ColumnDef{Name: "VarBinaryMax", T: ddl.Type{Name: ddl.Bytes, Len: ddl.MaxLength}, NotNull: false},
 				"VarChar":          ddl.ColumnDef{Name: "VarChar", T: ddl.Type{Name: ddl.String, Len: 50}, NotNull: false},
 				"VarCharMax":       ddl.ColumnDef{Name: "VarCharMax", T: ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, NotNull: false},
