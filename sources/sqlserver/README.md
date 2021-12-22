@@ -54,7 +54,7 @@ for SQLserver source. Password can be provided at the password prompt.
 | DATETIME2              | TIMESTAMP    |
 | SMALLDATETIME          | TIMESTAMP    |
 | DATETIMEOFFSET         | TIMESTAMP    |
-| TIME                   | TIMESTAMP    |
+| TIME                   | STRING       |
 | TIMESTAMP              | TIMESTAMP    |
 | ROWVERSION             | TIMESTAMP    |
 | BINARY                 | BYTES        |
