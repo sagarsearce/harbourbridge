@@ -105,9 +105,8 @@ func getSelectQuery(srcTable string, colNames []string, colDefs map[string]schem
 	var selects = make([]string, len(colNames))
 
 	for i, cn := range colNames {
-		cd := colDefs[cn]
 		var s string
-		switch cd.Type.Name {
+		switch colDefs[cn].Type.Name {
 		case geometryType, geographyType:
 			s = fmt.Sprintf("[%s].STAsText() AS %s", cn, cn)
 		case uuidType:
