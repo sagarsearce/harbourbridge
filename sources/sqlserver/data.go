@@ -29,15 +29,6 @@ import (
 	"github.com/cloudspannerecosystem/harbourbridge/internal"
 	"github.com/cloudspannerecosystem/harbourbridge/schema"
 	"github.com/cloudspannerecosystem/harbourbridge/spanner/ddl"
-	"github.com/google/uuid"
-)
-
-const (
-	uuidType        string = "uniqueidentifier"
-	geographyType   string = "geography"
-	geometryType    string = "geometry"
-	timeType        string = "time"
-	hierarchyIdType string = "hierarchyid"
 )
 
 // ProcessDataRow converts a row of data and writes it out to Spanner.
@@ -117,19 +108,7 @@ func convScalar(conv *internal.Conv, spannerType ddl.Type, srcTypeName string, T
 	case ddl.Numeric:
 		return convNumeric(conv, val)
 	case ddl.String:
-		{
-			switch srcTypeName {
-			case uuidType:
-				return getUuidString(val)
-			case geographyType, geometryType, hierarchyIdType:
-				//TODO: TBD the best way to store these. Currently storing as hex.
-				return fmt.Sprintf("%#x", []byte(val)), nil
-			case timeType:
-				return extractTime(val)
-			default:
-				return val, nil
-			}
-		}
+		return val, nil
 	case ddl.Timestamp:
 		return convTimestamp(srcTypeName, TimezoneOffset, val)
 	case ddl.JSON:
@@ -222,19 +201,4 @@ func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t tim
 		return t, fmt.Errorf("can't convert to timestamp (mssql type: %s)", srcTypeName)
 	}
 	return t, err
-}
-
-// extract only time form 0001-01-01 07:39:52.95 +0000 UTC this formate
-// output : 07:39:52.95
-func extractTime(val string) (interface{}, error) {
-	t := strings.Split(val, " ")[1]
-	return t, nil
-}
-
-func getUuidString(bs string) (string, error) {
-	r, err := uuid.FromBytes([]byte(bs))
-	if err != nil {
-		return "", fmt.Errorf("can't convert %q to UUID", bs)
-	}
-	return r.String(), nil
 }

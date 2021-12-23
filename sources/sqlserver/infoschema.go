@@ -26,6 +26,14 @@ import (
 	"github.com/cloudspannerecosystem/harbourbridge/spanner/ddl"
 )
 
+const (
+	uuidType        string = "uniqueidentifier"
+	geographyType   string = "geography"
+	geometryType    string = "geometry"
+	timeType        string = "time"
+	hierarchyIdType string = "hierarchyid"
+)
+
 type InfoSchemaImpl struct {
 	DbName string
 	Db     *sql.DB
@@ -85,12 +93,36 @@ func (isi InfoSchemaImpl) ProcessData(conv *internal.Conv, srcTable string, srcS
 
 // GetRowsFromTable returns a sql Rows object for a table.
 func (isi InfoSchemaImpl) GetRowsFromTable(conv *internal.Conv, srcTable string) (interface{}, error) {
-	q := fmt.Sprintf(`SELECT * FROM %s;`, srcTable)
+	q := getSelectQuery(srcTable, conv.SrcSchema[srcTable].ColNames, conv.SrcSchema[srcTable].ColDefs)
 	rows, err := isi.Db.Query(q)
 	if err != nil {
 		return nil, err
 	}
 	return rows, err
+}
+
+func getSelectQuery(srcTable string, colNames []string, colDefs map[string]schema.Column) string {
+	var selects = make([]string, len(colNames))
+
+	for i, cn := range colNames {
+		cd := colDefs[cn]
+		var s string
+		switch cd.Type.Name {
+		case geometryType, geographyType:
+			s = fmt.Sprintf("[%s].STAsText() AS %s", cn, cn)
+		case uuidType:
+			s = fmt.Sprintf("CAST([%s] AS VARCHAR(36)) AS %s", cn, cn)
+		case hierarchyIdType:
+			s = fmt.Sprintf("CAST([%s] AS VARCHAR(4000)) AS %s", cn, cn)
+		case timeType:
+			s = fmt.Sprintf("CAST([%s] AS VARCHAR(12)) AS %s", cn, cn)
+		default:
+			s = fmt.Sprintf("[%s]", cn)
+		}
+		selects[i] = s
+	}
+
+	return fmt.Sprintf("SELECT %s FROM %s", strings.Join(selects, ", "), srcTable)
 }
 
 // buildVals contructs interface{} value containers to scan row
