@@ -40,13 +40,6 @@ func (tdi ToDdlImpl) ToSpannerType(conv *internal.Conv, columnType schema.Type) 
 	if conv.TargetDb == constants.TargetExperimentalPostgres {
 		ty = overrideExperimentalType(columnType, ty)
 	}
-	// else {
-	// 	if len(columnType.ArrayBounds) > 1 {
-	// 		ty = ddl.Type{Name: ddl.String, Len: ddl.MaxLength}
-	// 		issues = append(issues, internal.MultiDimensionalArray)
-	// 	}
-	// 	ty.IsArray = len(columnType.ArrayBounds) == 1
-	// }
 	return ty, issues
 }
 
