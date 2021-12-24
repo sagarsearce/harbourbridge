@@ -47,7 +47,7 @@ func (isi InfoSchemaImpl) GetToDdl() common.ToDdl {
 
 // GetTableName returns table name.
 func (isi InfoSchemaImpl) GetTableName(schema string, tableName string) string {
-	if schema == "public" { // Drop 'public' prefix.
+	if schema == "dbo" { // Drop 'dbo' prefix.
 		return tableName
 	}
 	return fmt.Sprintf("%s.%s", schema, tableName)
@@ -267,7 +267,7 @@ func (isi InfoSchemaImpl) GetConstraints(conv *internal.Conv, table common.Schem
 			continue
 		}
 		if col == "" || constraint == "" {
-			conv.Unexpected(fmt.Sprintf("Got empty col or constraint"))
+			conv.Unexpected("Got empty col or constraint")
 			continue
 		}
 		switch constraint {

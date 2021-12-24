@@ -39,33 +39,33 @@ func TestProcessSchema(t *testing.T) {
 			query: `SELECT (.+) WHERE TBL.type = 'U' AND TBL.is_tracked_by_cdc = 0 AND TBL.is_ms_shipped = 0 AND TBL.name <> 'sysdiagrams'`,
 			cols:  []string{"table_schema", "table_name"},
 			rows: [][]driver.Value{
-				{"public", "user"},
-				{"public", "test"},
-				{"public", "cart"},
-				{"public", "product"},
-				{"public", "test_ref"},
+				{"dbo", "user"},
+				{"dbo", "test"},
+				{"dbo", "cart"},
+				{"production", "product"},
+				{"dbo", "test_ref"},
 			},
 		}, {
 			query: "SELECT (.+) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS (.+)",
-			args:  []driver.Value{"public", "user"},
+			args:  []driver.Value{"dbo", "user"},
 			cols:  []string{"column_name", "constraint_type"},
 			rows: [][]driver.Value{
 				{"user_id", "PRIMARY KEY"},
 				{"ref", "FOREIGN KEY"}},
 		}, {
 			query: "SELECT (.+) FROM sys.foreign_keys AS FK (.+)",
-			args:  []driver.Value{"public.user"},
+			args:  []driver.Value{"dbo.user"},
 			cols:  []string{"TABLE_SCHEMA", "TABLE_NAME", "COLUMN_NAME", "REF_COLUMN_NAME", "CONSTRAINT_NAME"},
 			rows: [][]driver.Value{
-				{"public", "test", "ref", "Id", "fk_test"},
+				{"dbo", "test", "ref", "Id", "fk_test"},
 			},
 		}, {
 			query: "SELECT (.+) FROM sys.indexes (.+)",
-			args:  []driver.Value{"user", "public"},
+			args:  []driver.Value{"user", "dbo"},
 			cols:  []string{"index_name", "column_name", "column_position", "is_unique", "order"},
 		}, {
 			query: "SELECT (.+) FROM information_schema.COLUMNS (.+)",
-			args:  []driver.Value{"public", "user"},
+			args:  []driver.Value{"dbo", "user"},
 			cols:  []string{"column_name", "data_type", "is_nullable", "column_default", "character_maximum_length", "numeric_precision", "numeric_scale"},
 			rows: [][]driver.Value{
 				{"user_id", "text", "NO", nil, nil, nil, nil},
@@ -73,23 +73,23 @@ func TestProcessSchema(t *testing.T) {
 				{"ref", "bigint", "YES", nil, nil, nil, nil}},
 		}, {
 			query: "SELECT (.+) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS (.+)",
-			args:  []driver.Value{"public", "test"},
+			args:  []driver.Value{"dbo", "test"},
 			cols:  []string{"column_name", "constraint_type"},
 			rows: [][]driver.Value{
 				{"Id", "PRIMARY KEY"},
 			},
 		}, {
 			query: "SELECT (.+) FROM sys.foreign_keys AS FK (.+)",
-			args:  []driver.Value{"public.test"},
+			args:  []driver.Value{"dbo.test"},
 			cols:  []string{"TABLE_SCHEMA", "TABLE_NAME", "COLUMN_NAME", "REF_COLUMN_NAME", "CONSTRAINT_NAME"},
-			rows:  [][]driver.Value{{"public", "test_ref", "id", "ref_id", "fk_test4"}},
+			rows:  [][]driver.Value{{"dbo", "test_ref", "id", "ref_id", "fk_test4"}},
 		}, {
 			query: "SELECT (.+) FROM sys.indexes (.+)",
-			args:  []driver.Value{"test", "public"},
+			args:  []driver.Value{"test", "dbo"},
 			cols:  []string{"index_name", "column_name", "column_position", "is_unique", "order"},
 		}, {
 			query: "SELECT (.+) FROM information_schema.COLUMNS (.+)",
-			args:  []driver.Value{"public", "test"},
+			args:  []driver.Value{"dbo", "test"},
 			cols:  []string{"column_name", "data_type", "is_nullable", "column_default", "character_maximum_length", "numeric_precision", "numeric_scale"},
 			rows: [][]driver.Value{
 				{"Id", "int", "NO", nil, nil, 10, 0},
@@ -134,7 +134,7 @@ func TestProcessSchema(t *testing.T) {
 
 		{
 			query: "SELECT (.+) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS (.+)",
-			args:  []driver.Value{"public", "cart"},
+			args:  []driver.Value{"dbo", "cart"},
 			cols:  []string{"column_name", "constraint_type"},
 			rows: [][]driver.Value{
 				{"productid", "PRIMARY KEY"},
@@ -142,14 +142,14 @@ func TestProcessSchema(t *testing.T) {
 			},
 		}, {
 			query: "SELECT (.+) FROM sys.foreign_keys AS FK (.+)",
-			args:  []driver.Value{"public.cart"},
+			args:  []driver.Value{"dbo.cart"},
 			cols:  []string{"TABLE_SCHEMA", "TABLE_NAME", "COLUMN_NAME", "REF_COLUMN_NAME", "CONSTRAINT_NAME"},
 			rows: [][]driver.Value{
-				{"public", "product", "productid", "product_id", "fk_test2"},
-				{"public", "user", "userid", "user_id", "fk_test3"}},
+				{"production", "product", "productid", "product_id", "fk_test2"},
+				{"dbo", "user", "userid", "user_id", "fk_test3"}},
 		}, {
 			query: "SELECT (.+) FROM sys.indexes (.+)",
-			args:  []driver.Value{"cart", "public"},
+			args:  []driver.Value{"cart", "dbo"},
 			cols:  []string{"index_name", "column_name", "is_unique", "order"},
 			rows: [][]driver.Value{{"index1", "userid", "false", "ASC"},
 				{"index2", "userid", "true", "ASC"},
@@ -159,7 +159,7 @@ func TestProcessSchema(t *testing.T) {
 			},
 		}, {
 			query: "SELECT (.+) FROM information_schema.COLUMNS (.+)",
-			args:  []driver.Value{"public", "cart"},
+			args:  []driver.Value{"dbo", "cart"},
 			cols:  []string{"column_name", "data_type", "is_nullable", "column_default", "character_maximum_length", "numeric_precision", "numeric_scale"},
 			rows: [][]driver.Value{
 				{"productid", "text", "NO", nil, nil, nil, nil},
@@ -169,22 +169,22 @@ func TestProcessSchema(t *testing.T) {
 
 		{
 			query: "SELECT (.+) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS (.+)",
-			args:  []driver.Value{"public", "product"},
+			args:  []driver.Value{"production", "product"},
 			cols:  []string{"column_name", "constraint_type"},
 			rows: [][]driver.Value{
 				{"product_id", "PRIMARY KEY"},
 			},
 		}, {
 			query: "SELECT (.+) FROM sys.foreign_keys AS FK (.+)",
-			args:  []driver.Value{"public.product"},
+			args:  []driver.Value{"production.product"},
 			cols:  []string{"TABLE_SCHEMA", "TABLE_NAME", "COLUMN_NAME", "REF_COLUMN_NAME", "CONSTRAINT_NAME"},
 		}, {
 			query: "SELECT (.+) FROM sys.indexes (.+)",
-			args:  []driver.Value{"product", "public"},
+			args:  []driver.Value{"product", "production"},
 			cols:  []string{"index_name", "column_name", "column_position", "is_unique", "order"},
 		}, {
 			query: "SELECT (.+) FROM information_schema.COLUMNS (.+)",
-			args:  []driver.Value{"public", "product"},
+			args:  []driver.Value{"production", "product"},
 			cols:  []string{"column_name", "data_type", "is_nullable", "column_default", "character_maximum_length", "numeric_precision", "numeric_scale"},
 			rows: [][]driver.Value{
 				{"product_id", "text", "NO", nil, nil, nil, nil},
@@ -194,7 +194,7 @@ func TestProcessSchema(t *testing.T) {
 
 		{
 			query: "SELECT (.+) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS (.+)",
-			args:  []driver.Value{"public", "test_ref"},
+			args:  []driver.Value{"dbo", "test_ref"},
 			cols:  []string{"column_name", "constraint_type"},
 			rows: [][]driver.Value{
 				{"ref_id", "PRIMARY KEY"},
@@ -202,15 +202,15 @@ func TestProcessSchema(t *testing.T) {
 			},
 		}, {
 			query: "SELECT (.+) FROM sys.foreign_keys AS FK (.+)",
-			args:  []driver.Value{"public.test_ref"},
+			args:  []driver.Value{"dbo.test_ref"},
 			cols:  []string{"TABLE_SCHEMA", "TABLE_NAME", "COLUMN_NAME", "REF_COLUMN_NAME", "CONSTRAINT_NAME"},
 		}, {
 			query: "SELECT (.+) FROM sys.indexes (.+)",
-			args:  []driver.Value{"test_ref", "public"},
+			args:  []driver.Value{"test_ref", "dbo"},
 			cols:  []string{"index_name", "column_name", "column_position", "is_unique", "order"},
 		}, {
 			query: "SELECT (.+) FROM information_schema.COLUMNS (.+)",
-			args:  []driver.Value{"public", "test_ref"},
+			args:  []driver.Value{"dbo", "test_ref"},
 			cols:  []string{"column_name", "data_type", "is_nullable", "column_default", "character_maximum_length", "numeric_precision", "numeric_scale"},
 			rows: [][]driver.Value{
 				{"ref_id", "bigint", "NO", nil, nil, 64, 0},
@@ -292,13 +292,13 @@ func TestProcessSchema(t *testing.T) {
 				"quantity":  {Name: "quantity", T: ddl.Type{Name: ddl.Int64}},
 			},
 			Pks: []ddl.IndexKey{{Col: "productid"}, {Col: "userid"}},
-			Fks: []ddl.Foreignkey{{Name: "fk_test2", Columns: []string{"productid"}, ReferTable: "product", ReferColumns: []string{"product_id"}},
+			Fks: []ddl.Foreignkey{{Name: "fk_test2", Columns: []string{"productid"}, ReferTable: "production_product", ReferColumns: []string{"product_id"}},
 				{Name: "fk_test3", Columns: []string{"userid"}, ReferTable: "user", ReferColumns: []string{"user_id"}}},
 			Indexes: []ddl.CreateIndex{{Name: "index1", Table: "cart", Unique: false, Keys: []ddl.IndexKey{{Col: "userid", Desc: false}}},
 				{Name: "index2", Table: "cart", Unique: true, Keys: []ddl.IndexKey{{Col: "userid", Desc: false}, {Col: "productid", Desc: true}}},
 				{Name: "index3", Table: "cart", Unique: true, Keys: []ddl.IndexKey{{Col: "productid", Desc: true}, {Col: "userid", Desc: false}}}}},
-		"product": {
-			Name:     "product",
+		"production_product": {
+			Name:     "production_product",
 			ColNames: []string{"product_id", "product_name"},
 			ColDefs: map[string]ddl.ColumnDef{
 				"product_id":   {Name: "product_id", T: ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, NotNull: true},

@@ -30,7 +30,7 @@ for SQLserver source. Password can be provided at the password prompt.
 
 ## Schema Conversion
 
-| MSSQL_Type             | Spanner_Type |
+| SQL_Server_Type        | Spanner_Type |
 | ---------------------- | ------------ |
 | INT                    | INT64        |
 | TINYINT                | INT64        |
