@@ -32,6 +32,7 @@ const (
 	geometryType    string = "geometry"
 	timeType        string = "time"
 	hierarchyIdType string = "hierarchyid"
+	timestampType   string = "timestamp"
 )
 
 type InfoSchemaImpl struct {
@@ -115,6 +116,8 @@ func getSelectQuery(srcTable string, colNames []string, colDefs map[string]schem
 			s = fmt.Sprintf("CAST([%s] AS VARCHAR(4000)) AS %s", cn, cn)
 		case timeType:
 			s = fmt.Sprintf("CAST([%s] AS VARCHAR(12)) AS %s", cn, cn)
+		case timestampType:
+			s = fmt.Sprintf("CAST([%s] AS BIGINT) AS %s", cn, cn)
 		default:
 			s = fmt.Sprintf("[%s]", cn)
 		}
@@ -138,7 +141,7 @@ func buildVals(n int) (v []interface{}, iv []interface{}) {
 
 // GetRowCount with number of rows in each table.
 func (isi InfoSchemaImpl) GetRowCount(table common.SchemaAndName) (int64, error) {
-	q := fmt.Sprintf(`SELECT COUNT(*) FROM "%s"."%s";`, table.Schema, table.Name)
+	q := fmt.Sprintf(`SELECT COUNT(1) FROM "%s"."%s";`, table.Schema, table.Name)
 	rows, err := isi.Db.Query(q)
 	if err != nil {
 		return 0, err

@@ -85,7 +85,7 @@ func TestToSpannerType(t *testing.T) {
 			"c": ddl.ColumnDef{Name: "c", T: ddl.Type{Name: ddl.Int64}},
 			"d": ddl.ColumnDef{Name: "d", T: ddl.Type{Name: ddl.String, Len: int64(6)}},
 			"e": ddl.ColumnDef{Name: "e", T: ddl.Type{Name: ddl.Numeric}},
-			"f": ddl.ColumnDef{Name: "f", T: ddl.Type{Name: ddl.Timestamp}},
+			"f": ddl.ColumnDef{Name: "f", T: ddl.Type{Name: ddl.Int64}},
 			"g": ddl.ColumnDef{Name: "g", T: ddl.Type{Name: ddl.Bytes, Len: ddl.MaxLength}},
 			"h": ddl.ColumnDef{Name: "h", T: ddl.Type{Name: ddl.Date}},
 			"i": ddl.ColumnDef{Name: "i", T: ddl.Type{Name: ddl.Numeric}},
@@ -105,7 +105,6 @@ func TestToSpannerType(t *testing.T) {
 		"a": []internal.SchemaIssue{internal.Widened},
 		"b": []internal.SchemaIssue{internal.Widened},
 		"c": []internal.SchemaIssue{internal.Widened},
-		"f": []internal.SchemaIssue{internal.Timestamp},
 		"j": []internal.SchemaIssue{internal.Timestamp},
 		"m": []internal.SchemaIssue{internal.NoGoodType},
 	}

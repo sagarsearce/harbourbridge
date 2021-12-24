@@ -15,7 +15,6 @@
 package sqlserver
 
 import (
-	"encoding/binary"
 	"fmt"
 	"math/big"
 	"math/bits"
@@ -174,10 +173,7 @@ func convNumeric(conv *internal.Conv, val string) (interface{}, error) {
 // convTimestamp maps a source DB timestamp into a go Time Spanner timestamp
 // It handles both datetime and timestamp conversions.
 func convTimestamp(srcTypeName string, TimezoneOffset string, val string) (t time.Time, err error) {
-	if srcTypeName == "timestamp" {
-		uint := binary.BigEndian.Uint64([]byte(val))
-		t = time.Unix(int64(uint), 0)
-	} else if srcTypeName == "datetimeoffset" {
+	if srcTypeName == "datetimeoffset" {
 		// val will be in the format "2021-12-15 07:39:52.9433333 +0000 +0000"
 		// the part after time can be ignored
 		if idx := strings.Index(val, "+"); idx != -1 {
