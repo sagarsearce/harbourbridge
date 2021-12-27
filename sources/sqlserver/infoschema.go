@@ -95,7 +95,7 @@ func (isi InfoSchemaImpl) ProcessData(conv *internal.Conv, srcTable string, srcS
 // GetRowsFromTable returns a sql Rows object for a table.
 func (isi InfoSchemaImpl) GetRowsFromTable(conv *internal.Conv, srcTable string) (interface{}, error) {
 	tbl := conv.SrcSchema[srcTable]
-	//to get only the table name by remove the schema name prefix
+	//To get only the table name by removing the schema name prefix
 	tblName := strings.Replace(srcTable, tbl.Schema+".", "", 1)
 
 	q := getSelectQuery(isi.DbName, tbl.Schema, tblName, tbl.ColNames, tbl.ColDefs)
