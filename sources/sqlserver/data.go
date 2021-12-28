@@ -58,7 +58,7 @@ func ConvertData(conv *internal.Conv, srcTable string, srcCols []string, srcSche
 	for i, spCol := range spCols {
 		srcCol := srcCols[i]
 		// Skip columns with 'NULL' values.
-		if vals[i] == "<nil>" || vals[i] == "NULL" {
+		if vals[i] == "NULL" {
 			continue
 		}
 		spColDef, ok1 := spSchema.ColDefs[spCol]

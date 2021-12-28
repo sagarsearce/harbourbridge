@@ -132,7 +132,7 @@ func TestConvertMultiColData(t *testing.T) {
 		{
 			name:  "Null column",
 			cols:  []string{"a", "b", "c"},
-			vals:  []string{"6", "<nil>", "1"},
+			vals:  []string{"6", "NULL", "1"},
 			ecols: []string{"a", "c"},
 			evals: []interface{}{int64(6), true},
 		},
