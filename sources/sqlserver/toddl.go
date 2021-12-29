@@ -72,6 +72,7 @@ func toSpannerTypeInternal(conv *internal.Conv, id string, mods []int64) (ddl.Ty
 	case "time":
 		return ddl.Type{Name: ddl.String, Len: ddl.MaxLength}, []internal.SchemaIssue{internal.Time}
 	case "varchar", "char", "nvarchar", "nchar":
+		// sets the length only if the source length false within the allowed length range in Spanner.
 		if len(mods) > 0 && mods[0] > 0 && mods[0] <= stringLimit {
 			return ddl.Type{Name: ddl.String, Len: mods[0]}, nil
 		}
