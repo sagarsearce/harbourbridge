@@ -103,7 +103,7 @@ jobs:
       # create a spanner instance
       - uses: google-github-actions/setup-gcloud@master
         with:
-          version: "290.0.1"
+          version: '290.0.1'
       - run: gcloud info
       - run: gcloud config configurations create emulator
       - run: gcloud config set auth/disable_credentials true
@@ -114,7 +114,8 @@ jobs:
       # run tests
       - uses: actions/setup-go@v2
         with:
-          go-version: "1.13"
+          go-version: '1.13'
+      - run: go version
       - run: go test -v ./...
         env:
           SPANNER_EMULATOR_HOST: localhost:9010
