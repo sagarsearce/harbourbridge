@@ -27,12 +27,16 @@ import (
 )
 
 const (
-	uuidType        string = "uniqueidentifier"
-	geographyType   string = "geography"
-	geometryType    string = "geometry"
-	timeType        string = "time"
-	hierarchyIdType string = "hierarchyid"
-	timestampType   string = "timestamp"
+	uuidType           string = "uniqueidentifier"
+	geographyType      string = "geography"
+	geometryType       string = "geometry"
+	timeType           string = "time"
+	hierarchyIdType    string = "hierarchyid"
+	timestampType      string = "timestamp"
+	dateTimeType       string = "datetime"
+	dateTime2Type      string = "datetime2"
+	dateTimeOffsetType string = "datetimeoffset"
+	smallDateTimeType  string = "smalldatetime"
 )
 
 type InfoSchemaImpl struct {
@@ -122,6 +126,8 @@ func getSelectQuery(srcDb string, schemaName string, tableName string, colNames 
 			s = fmt.Sprintf("CAST([%s] AS VARCHAR(12)) AS %s", cn, cn)
 		case timestampType:
 			s = fmt.Sprintf("CAST([%s] AS BIGINT) AS %s", cn, cn)
+		case smallDateTimeType, dateTimeType, dateTime2Type, dateTimeOffsetType:
+			s = fmt.Sprintf("CONVERT(VARCHAR(33), [%s], 126) AS %s", cn, cn)
 		default:
 			s = fmt.Sprintf("[%s]", cn)
 		}
