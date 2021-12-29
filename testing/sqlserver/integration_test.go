@@ -107,7 +107,6 @@ func prepareIntegrationTest(t *testing.T) string {
 func TestIntegration_SQLserver_SchemaSubcommand(t *testing.T) {
 	onlyRunForEmulatorTest(t)
 	t.Parallel()
-
 	tmpdir := prepareIntegrationTest(t)
 	defer os.RemoveAll(tmpdir)
 	filePrefix := filepath.Join(tmpdir, "SqlServer_IntTest..")
@@ -119,7 +118,7 @@ func TestIntegration_SQLserver_SchemaSubcommand(t *testing.T) {
 	}
 }
 func TestIntegration_SQLserver_SchemaAndDataSubcommand(t *testing.T) {
-
+	onlyRunForEmulatorTest(t)
 	tmpdir := prepareIntegrationTest(t)
 	defer os.RemoveAll(tmpdir)
 
