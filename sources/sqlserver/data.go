@@ -109,7 +109,7 @@ func convScalar(conv *internal.Conv, spannerType ddl.Type, srcTypeName string, t
 	case ddl.String:
 		return val, nil
 	case ddl.Timestamp:
-		return convTimestamp(srcTypeName, timezoneOffset, val)
+		return convTimestamp(srcTypeName, val)
 	default:
 		return val, fmt.Errorf("data conversion not implemented for type %v", spannerType.Name)
 	}
@@ -169,14 +169,13 @@ func convNumeric(conv *internal.Conv, val string) (interface{}, error) {
 }
 
 // convTimestamp maps a source DB datetime types to Spanner timestamp
-func convTimestamp(srcTypeName string, timezoneOffset string, val string) (t time.Time, err error) {
+func convTimestamp(srcTypeName string, val string) (t time.Time, err error) {
 	// the query returns the datetime in ISO8601
 	// e.g. 2021-12-15T07:39:52.943 			(datetime)
 	// e.g. 2021-12-15T07:39:52.9433333 		(datetime2)
 	// e.g. 2021-12-15T07:40:00 				(smalldatetime)
 	// e.g. 2021-12-08T03:00:52.9500000+01:00 	(datetimeoffset)
 
-	//TODO: To add offset after discussion
 	if srcTypeName == dateTimeOffsetType {
 		t, err = time.Parse(time.RFC3339, val)
 	} else {
