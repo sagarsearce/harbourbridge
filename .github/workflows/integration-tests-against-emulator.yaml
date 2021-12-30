@@ -66,11 +66,14 @@ jobs:
       sqlserver:
         image: mcr.microsoft.com/mssql/server
         env:
-          SA_PASSWORD: tCUE9c1&Ucp0
+          SA_PASSWORD: ${{env.SA_PASSWORD}}
           MSSQL_PID: Express
           ACCEPT_EULA: Y
         ports:
           - 1433:1433
+        options:
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -U sa -P $SA_PASSWORD -Q 'select 1' -b -o /dev/null"
+          --health-interval 10s --health-timeout 5s --health-retries 3
 
     steps:
       - uses: actions/checkout@v2
