@@ -61,6 +61,7 @@ import (
 	"github.com/cloudspannerecosystem/harbourbridge/sources/dynamodb"
 	"github.com/cloudspannerecosystem/harbourbridge/sources/mysql"
 	"github.com/cloudspannerecosystem/harbourbridge/sources/postgres"
+	"github.com/cloudspannerecosystem/harbourbridge/sources/sqlserver"
 	"github.com/cloudspannerecosystem/harbourbridge/spanner"
 	"github.com/cloudspannerecosystem/harbourbridge/spanner/ddl"
 )
@@ -84,7 +85,7 @@ var (
 // When using source-profile, the sqlConnectionStr is constructed from the input params.
 func SchemaConv(driver, sqlConnectionStr, targetDb string, ioHelper *IOStreams, schemaSampleSize int64) (*internal.Conv, error) {
 	switch driver {
-	case constants.POSTGRES, constants.MYSQL, constants.DYNAMODB:
+	case constants.POSTGRES, constants.MYSQL, constants.DYNAMODB, constants.SQLSERVER:
 		return schemaFromDatabase(driver, sqlConnectionStr, targetDb, schemaSampleSize)
 	case constants.PGDUMP, constants.MYSQLDUMP:
 		return schemaFromDump(driver, targetDb, ioHelper)
@@ -107,7 +108,7 @@ func DataConv(driver, sqlConnectionStr string, ioHelper *IOStreams, client *sp.C
 		Verbose:    internal.Verbose(),
 	}
 	switch driver {
-	case constants.POSTGRES, constants.MYSQL, constants.DYNAMODB:
+	case constants.POSTGRES, constants.MYSQL, constants.DYNAMODB, constants.SQLSERVER:
 		return dataFromDatabase(driver, sqlConnectionStr, config, client, conv, schemaSampleSize)
 	case constants.PGDUMP, constants.MYSQLDUMP:
 		if conv.SpSchema.CheckInterleaved() {
@@ -129,11 +130,13 @@ func connectionConfig(driver string, sqlConnectionStr string) (interface{}, erro
 		}
 		return sqlConnectionStr, nil
 	case constants.MYSQL:
-		// If empty, this is called as part of the legacy mode witih global CLI flags.
-		// When using source-profile mode is used, the sqlConnectionStr is already populated.
 		if sqlConnectionStr == "" {
 			return generateMYSQLConnectionStr()
 		}
+		return sqlConnectionStr, nil
+	case constants.SQLSERVER:
+		// we are not supporting legecy codepath for SQL server and getting value from source profile
+		// so sqlConnectionStr is already populated.
 		return sqlConnectionStr, nil
 	case constants.DYNAMODB:
 		return getDynamoDBClientConfig()
@@ -182,6 +185,10 @@ func GetMYSQLConnectionStr(server, port, user, password, dbname string) string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, server, port, dbname)
 }
 
+func GetSQLSERVERConnectionStr(server, port, user, password, dbname string) string {
+	return fmt.Sprintf(`sqlserver://%s:%s@%s:%s?database=%s`, user, password, server, port, dbname)
+}
+
 func getDbNameFromSQLConnectionStr(driver, sqlConnectionStr string) string {
 	switch driver {
 	case constants.POSTGRES:
@@ -189,6 +196,9 @@ func getDbNameFromSQLConnectionStr(driver, sqlConnectionStr string) string {
 		return strings.Split(dbParam, "=")[1]
 	case constants.MYSQL:
 		return strings.Split(sqlConnectionStr, ")/")[1]
+	case constants.SQLSERVER:
+		splts := strings.Split(sqlConnectionStr, "?database=")
+		return splts[len(splts)-1]
 	}
 	return ""
 }
@@ -1113,6 +1123,13 @@ func GetInfoSchema(driver, sqlConnectionStr string, schemaSampleSize int64) (com
 		mySession := session.Must(session.NewSession())
 		dydbClient := dydb.New(mySession, connectionConfig.(*aws.Config))
 		return dynamodb.InfoSchemaImpl{DynamoClient: dydbClient, SampleSize: schemaSampleSize}, nil
+	case constants.SQLSERVER:
+		db, err := sql.Open(driver, connectionConfig.(string))
+		dbName := getDbNameFromSQLConnectionStr(driver, connectionConfig.(string))
+		if err != nil {
+			return nil, err
+		}
+		return sqlserver.InfoSchemaImpl{DbName: dbName, Db: db}, nil
 	default:
 		return nil, fmt.Errorf("driver %s not supported", driver)
 	}
