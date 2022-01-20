@@ -77,6 +77,7 @@ jobs:
           --health-interval 10s --health-timeout 5s --health-retries 3
       oracle:
         image: oracleinanutshell/oracle-xe-11g
+        env:
         ports: 
           - 1521:1521
           
@@ -126,7 +127,7 @@ jobs:
           sudo alien -i oracle-instantclient-sqlplus-21.5.0.0.0-1.x86_64.rpm
           sudo sh -c 'echo /usr/lib/oracle/21.5/client64/lib/ > /etc/ld.so.conf.d/oracle.conf'
           sudo ldconfig
-      - run: sqlplus SYS/oracle@127.0.0.1:1521/xe as sysdba @test_data/oracle.test.out
+      - run: sqlplus SYS/oracle@127.0.0.1:1521/xe as sysdba < test_data/oracle.test.out
     
       # create a spanner instance
       # - uses: google-github-actions/setup-gcloud@master
