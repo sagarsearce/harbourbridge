@@ -35,49 +35,48 @@ jobs:
       MSSQL_SA_PASSWORD : tCUE9c1&Ucp0 
 
     services:
-      spanner_emulator:
-        image: gcr.io/cloud-spanner-emulator/emulator:1.4.0
-        ports:
-          - 9010:9010
-          - 9020:9020
-      postgres:
-        image: postgres:9.6
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-        - 5432:5432
-        # needed because the postgres container does not provide a healthcheck
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      mariadb:
-        image: mariadb:10.3
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: test
-        ports:
-        - 3306:3306
-        # needed because the mysql container does not provide a healthcheck
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-      dynamodb_emulator:
-        image: amazon/dynamodb-local:1.16.0
-        ports:
-        - 8000:8000
-        options: --workdir /home/dynamodblocal --health-cmd "curl --fail http://127.0.0.1:8000/shell/ || exit 1" --health-interval 10s --health-timeout 5s --health-retries 5
-      sqlserver:
-        image: mcr.microsoft.com/mssql/server
-        env:
-          SA_PASSWORD: ${{env.MSSQL_SA_PASSWORD}}
-          MSSQL_PID: Express
-          ACCEPT_EULA: Y
-        ports:
-          - 1433:1433
-        options:
-          --health-cmd "/opt/mssql-tools/bin/sqlcmd -U sa -P $SA_PASSWORD -Q 'select 1' -b -o /dev/null"
-          --health-interval 10s --health-timeout 5s --health-retries 3
+      # spanner_emulator:
+      #   image: gcr.io/cloud-spanner-emulator/emulator:1.4.0
+      #   ports:
+      #     - 9010:9010
+      #     - 9020:9020
+      # postgres:
+      #   image: postgres:9.6
+      #   env:
+      #     POSTGRES_USER: postgres
+      #     POSTGRES_PASSWORD: postgres
+      #     POSTGRES_DB: postgres
+      #   ports:
+      #   - 5432:5432
+      #   # needed because the postgres container does not provide a healthcheck
+      #   options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      # mariadb:
+      #   image: mariadb:10.3
+      #   env:
+      #     MYSQL_ROOT_PASSWORD: root
+      #     MYSQL_DATABASE: test
+      #   ports:
+      #   - 3306:3306
+      #   # needed because the mysql container does not provide a healthcheck
+      #   options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      # dynamodb_emulator:
+      #   image: amazon/dynamodb-local:1.16.0
+      #   ports:
+      #   - 8000:8000
+      #   options: --workdir /home/dynamodblocal --health-cmd "curl --fail http://127.0.0.1:8000/shell/ || exit 1" --health-interval 10s --health-timeout 5s --health-retries 5
+      # sqlserver:
+      #   image: mcr.microsoft.com/mssql/server
+      #   env:
+      #     SA_PASSWORD: ${{env.MSSQL_SA_PASSWORD}}
+      #     MSSQL_PID: Express
+      #     ACCEPT_EULA: Y
+      #   ports:
+      #     - 1433:1433
+      #   options:
+      #     --health-cmd "/opt/mssql-tools/bin/sqlcmd -U sa -P $SA_PASSWORD -Q 'select 1' -b -o /dev/null"
+      #     --health-interval 10s --health-timeout 5s --health-retries 3
       oracle:
         image: oracleinanutshell/oracle-xe-11g
-        env:
         ports: 
           - 1521:1521
           
