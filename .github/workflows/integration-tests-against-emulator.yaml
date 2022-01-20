@@ -126,8 +126,8 @@ jobs:
           sudo alien -i oracle-instantclient-sqlplus-21.5.0.0.0-1.x86_64.rpm
           sudo sh -c 'echo /usr/lib/oracle/21.5/client64/lib/ > /etc/ld.so.conf.d/oracle.conf'
           sudo ldconfig
-      - run: sqlplus sys/oracle@127.0.0.1:1521/XE as sysdba @test_data/oracle.test.out
-    
+      - run: sqlplus system/oracle@127.0.0.1:1521/xe as sysdba @test_data/oracle.test.out
+      
       # create a spanner instance
       # - uses: google-github-actions/setup-gcloud@master
       #   with:
