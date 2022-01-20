@@ -120,7 +120,7 @@ jobs:
       - name: Install sqlplus required for loading .sql files
         run: |
           sudo apt install alien libaio1
-          sudo alien -i oracle-instantclient19.12-basiclite-19.12.0.0.0-1.x86_64.rpm
+          curl -O https://download.oracle.com/otn_software/linux/instantclient/215000/oracle-instantclient-basic-21.5.0.0.0-1.x86_64.rpm          sudo alien -i oracle-instantclient19.12-basiclite-19.12.0.0.0-1.x86_64.rpm
           sudo sh -c 'echo /usr/lib/oracle/19.12/client64/lib/ > /etc/ld.so.conf.d/oracle.conf'
           sudo ldconfig
       - run: sqlplus 
