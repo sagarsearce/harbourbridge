@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - master
+      - test
   pull_request:
 name: integration-tests-against-emulator
 jobs:
@@ -74,7 +75,11 @@ jobs:
         options:
           --health-cmd "/opt/mssql-tools/bin/sqlcmd -U sa -P $SA_PASSWORD -Q 'select 1' -b -o /dev/null"
           --health-interval 10s --health-timeout 5s --health-retries 3
-
+      oracle:
+        image: quillbuilduser/oracle-18-xe
+        ports: 
+          - 1521:1521
+          
     steps:
       - uses: actions/checkout@v2
 
