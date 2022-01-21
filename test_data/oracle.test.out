@@ -1,11 +1,11 @@
 create user sti identified by test1;
 grant all privileges to sti;
 connect sti/test1@127.0.0.1:1521/xe;
-CREATE TABLE st1.persons(
+CREATE TABLE STI.persons(
 	first_name VARCHAR2(50) NOT NULL,
     last_name VARCHAR2(50) NOT NULL
 );
-Insert into st1.persons(first_name,last_name) values('sagar','test');
+Insert into STI.persons(first_name,last_name) values('sagar','test');
 CREATE TABLE "STI"."ALLTYPES"(
 	"ID" NUMBER, 
 	"BFILE_T" BFILE, 
