@@ -165,9 +165,8 @@ func checkCommonDataType(ctx context.Context, t *testing.T, client *spanner.Clie
 		Int_t:       int64(42),
 		Numeric_t:   "42.0",
 		String_t:    "some varchar data",
-		Timestamp_t: "2022-01-19T11:27:16.262Z",
+		Timestamp_t: "2022-01-19T11:27:18.262Z",
 	}
-
 	var date spanner.NullDate
 	var floatVal float64
 	var intVal int64
@@ -189,7 +188,6 @@ func checkCommonDataType(ctx context.Context, t *testing.T, client *spanner.Clie
 		}
 
 		fmt.Fprintf(os.Stdout, "%v,%v,%v,%v,%v,%v", date, floatVal, intVal, numericVal, stringVal, timeVal)
-
 		gotRecord := SpannerRecord{
 			Date_t:      date,
 			Float_t:     floatVal,
@@ -200,25 +198,6 @@ func checkCommonDataType(ctx context.Context, t *testing.T, client *spanner.Clie
 		}
 		assert.True(t, cmp.Equal(wantRecord, gotRecord))
 	}
-
-	// if got, want := date.String(), "2022-01-18"; got != want {
-	// 	t.Fatalf("Date are not correct: got %v, want %v", got, want)
-	// }
-	// if got, want := floatVal, 1234.56789; got != want {
-	// 	t.Fatalf("float are not correct: got %v, want %v", got, want)
-	// }
-	// if got, want := intVal, int64(42); got != want {
-	// 	t.Fatalf("int are not correct: got %v, want %v", got, want)
-	// }
-	// if got, want := numericVal.FloatString(9), "42.000000000"; got != want {
-	// 	t.Fatalf("Numeric are not correct: got %v, want %v", got, want)
-	// }
-	// if got, want := stringVal, "some varchar data"; got != want {
-	// 	t.Fatalf("varchar are not correct: got %v, want %v", got, want)
-	// }
-	// if got, want := timeVal.String(), "2022-01-19T11:27:18.262Z"; got != want {
-	// 	t.Fatalf("Timestamp are not correct: got %v, want %v", got, want)
-	// }
 }
 
 func onlyRunForEmulatorTest(t *testing.T) {
