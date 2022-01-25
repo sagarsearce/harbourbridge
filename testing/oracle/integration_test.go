@@ -163,7 +163,7 @@ func checkCommonDataType(ctx context.Context, t *testing.T, client *spanner.Clie
 		Date_t:      spanner.NullDate{Valid: true, Date: civil.Date{Day: 18, Year: 2022, Month: 01}},
 		Float_t:     float64(1234.56789),
 		Int_t:       int64(42),
-		Numeric_t:   "42.0",
+		Numeric_t:   "42.000000000",
 		String_t:    "some varchar data",
 		Timestamp_t: "2022-01-19T11:27:18.262Z",
 	}
